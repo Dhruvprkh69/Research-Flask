@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Citations - Research AI Assistant{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: #667eea;">📚 Citation Generator</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+        Generate accurate citations for arXiv papers in multiple formats instantly.
+    </p>
+</div>
+
+<div class="grid">
+    <!-- Citation Generator -->
+    <div class="card">
+        <h3>🔗 Generate Citation</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Paste an arXiv URL to generate citations</p>
+        
+        <form id="citationForm">
+            <div style="margin-bottom: 1rem;">
+                <label for="arxivUrl" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">ArXiv URL:</label>
+                <input type="url" id="arxivUrl" class="input-field" placeholder="https://arxiv.org/abs/..." required>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label for="citationStyle" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Citation Style:</label>
+                <select id="citationStyle" class="input-field">
+                    <option value="APA">APA (American Psychological Association)</option>
+                    <option value="MLA">MLA (Modern Language Association)</option>
+                    <option value="Chicago">Chicago</option>
+                    <option value="IEEE">IEEE</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn">✨ Generate Citation</button>
+        </form>
+        
+        <div id="citationLoading" class="loading">
+            <div class="spinner"></div>
+            <p>Generating citation...</p>
+        </div>
+    </div>
+
+    <!-- Citation Result -->
+    <div class="card">
+        <h3>📝 Citation Result</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Your generated citation will appear here</p>
+        
+        <div id="citationResult" style="display: none;">
+            <div style="background: rgba(102, 126, 234, 0.05); padding: 1.5rem; border-radius: 10px; margin: 1rem 0; border-left: 4px solid #667eea;">
+                <h4 id="citationStyleTitle" style="color: #667eea; margin-bottom: 1rem;"></h4>
+                <p id="citationText" style="font-family: 'Courier New', monospace; line-height: 1.6; margin-bottom: 1rem;"></p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" id="copyCitationBtn">📋 Copy</button>
+                    <button class="btn btn-secondary" id="downloadCitationBtn">📥 Download</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="noCitation" style="text-align: center; color: #666; padding: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+            <p>Enter an arXiv URL and select a citation style to generate your citation</p>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Citation Generator -->
+<div class="card">
+    <h3>📚 Batch Citation Generator</h3>
+    <p style="color: #666; margin-bottom: 1rem;">Generate multiple citations at once</p>
+    
+    <div style="margin-bottom: 1rem;">
+        <label for="batchUrls" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">ArXiv URLs (one per line):</label>
+        <textarea id="batchUrls" class="input-field" rows="5" placeholder="https://arxiv.org/abs/...&#10;https://arxiv.org/abs/...&#10;https://arxiv.org/abs/..."></textarea>
+    </div>
+    
+    <div style="margin-bottom: 1rem;">
+        <label for="batchStyle" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Citation Style:</label>
+        <select id="batchStyle" class="input-field">
+            <option value="APA">APA</option>
+            <option value="MLA">MLA</option>
+            <option value="Chicago">Chicago</option>
+            <option value="IEEE">IEEE</option>
+        </select>
+    </div>
+    
+    <button class="btn" id="generateBatchBtn">🚀 Generate Batch Citations</button>
+    
+    <div id="batchLoading" class="loading">
+        <div class="spinner"></div>
+        <p>Generating batch citations...</p>
+    </div>
+    
+    <div id="batchResult" style="display: none;">
+        <h4>📋 Batch Results</h4>
+        <div id="batchCitations" style="max-height: 400px; overflow-y: auto;"></div>
+        <button class="btn btn-secondary" id="downloadBatchBtn">📥 Download All</button>
+    </div>
+</div>
+
+<!-- Citation Style Guide -->
+<div class="card">
+    <h3>📖 Citation Style Guide</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px;">
+            <h4 style="color: #667eea;">APA Style</h4>
+            <p style="font-size: 0.9rem; color: #666;">Common in psychology, education, and social sciences</p>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px;">
+            <h4 style="color: #667eea;">MLA Style</h4>
+            <p style="font-size: 0.9rem; color: #666;">Used in humanities and liberal arts</p>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px;">
+            <h4 style="color: #667eea;">Chicago Style</h4>
+            <p style="font-size: 0.9rem; color: #666;">Popular in history, literature, and arts</p>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px;">
+            <h4 style="color: #667eea;">IEEE Style</h4>
+            <p style="font-size: 0.9rem; color: #666;">Standard in engineering and computer science</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Single citation generation
+document.getElementById('citationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const arxivUrl = document.getElementById('arxivUrl').value.trim();
+    const citationStyle = document.getElementById('citationStyle').value;
+    
+    if (!arxivUrl) {
+        showAlert('Please enter an arXiv URL', 'error');
+        return;
+    }
+    
+    showLoading('citationLoading');
+    hideLoading('citationResult');
+    hideLoading('noCitation');
+    
+    try {
+        const response = await fetch('/citations/generate-citation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                arxiv_url: arxivUrl,
+                style: citationStyle
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('citationStyleTitle').textContent = `${citationStyle} Citation`;
+            document.getElementById('citationText').textContent = result.citation;
+            document.getElementById('citationResult').style.display = 'block';
+            showAlert('Citation generated successfully!', 'success');
+        } else {
+            showAlert(result.error || 'Failed to generate citation', 'error');
+            document.getElementById('noCitation').style.display = 'block';
+        }
+    } catch (error) {
+        showAlert('Error generating citation: ' + error.message, 'error');
+        document.getElementById('noCitation').style.display = 'block';
+    } finally {
+        hideLoading('citationLoading');
+    }
+});
+
+// Copy citation
+document.getElementById('copyCitationBtn').addEventListener('click', function() {
+    const citationText = document.getElementById('citationText').textContent;
+    navigator.clipboard.writeText(citationText).then(function() {
+        showAlert('Citation copied to clipboard!', 'success');
+    }).catch(function() {
+        showAlert('Failed to copy citation', 'error');
+    });
+});
+
+// Download citation
+document.getElementById('downloadCitationBtn').addEventListener('click', async function() {
+    const citationText = document.getElementById('citationText').textContent;
+    const style = document.getElementById('citationStyle').value;
+    
+    if (!citationText) {
+        showAlert('No citation to download', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/citations/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                citation: citationText,
+                style: style
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const blob = new Blob([result.download_text], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = result.filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showAlert('Citation downloaded successfully!', 'success');
+        } else {
+            showAlert('Failed to download citation', 'error');
+        }
+    } catch (error) {
+        showAlert('Error downloading citation: ' + error.message, 'error');
+    }
+});
+
+// Batch citation generation
+document.getElementById('generateBatchBtn').addEventListener('click', async function() {
+    const urlsText = document.getElementById('batchUrls').value.trim();
+    const style = document.getElementById('batchStyle').value;
+    
+    if (!urlsText) {
+        showAlert('Please enter at least one arXiv URL', 'error');
+        return;
+    }
+    
+    const urls = urlsText.split('\n').filter(url => url.trim());
+    
+    if (urls.length === 0) {
+        showAlert('Please enter valid arXiv URLs', 'error');
+        return;
+    }
+    
+    showLoading('batchLoading');
+    hideLoading('batchResult');
+    
+    try {
+        const response = await fetch('/citations/generate-bibliography', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                arxiv_urls: urls,
+                style: style
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayBatchResults(result.bibliography, style);
+            showAlert(`Generated ${result.successful_citations} citations!`, 'success');
+        } else {
+            showAlert(result.error || 'Failed to generate batch citations', 'error');
+        }
+    } catch (error) {
+        showAlert('Error generating batch citations: ' + error.message, 'error');
+    } finally {
+        hideLoading('batchLoading');
+    }
+});
+
+function displayBatchResults(bibliography, style) {
+    const container = document.getElementById('batchCitations');
+    container.innerHTML = '';
+    
+    if (typeof bibliography === 'string') {
+        // Split by double newlines to separate citations
+        const citations = bibliography.split('\n\n').filter(citation => citation.trim());
+        
+        citations.forEach((citation, index) => {
+            const resultDiv = document.createElement('div');
+            resultDiv.style.cssText = 'background: rgba(102, 126, 234, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #667eea;';
+            
+            resultDiv.innerHTML = `
+                <h5 style="color: #667eea; margin-bottom: 0.5rem;">Citation ${index + 1}</h5>
+                <p style="font-family: "Courier New", monospace; line-height: 1.6; margin-bottom: 0.5rem;">${citation.trim()}</p>
+            `;
+            
+            container.appendChild(resultDiv);
+        });
+    } else {
+        // Fallback for array format
+        const citations = Array.isArray(bibliography) ? bibliography : [bibliography];
+        citations.forEach((citation, index) => {
+            const resultDiv = document.createElement('div');
+            resultDiv.style.cssText = 'background: rgba(102, 126, 234, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #667eea;';
+            
+            resultDiv.innerHTML = `
+                <h5 style="color: #667eea; margin-bottom: 0.5rem;">Citation ${index + 1}</h5>
+                <p style="font-family: "Courier New", monospace; line-height: 1.6; margin-bottom: 0.5rem;">${citation}</p>
+            `;
+            
+            container.appendChild(resultDiv);
+        });
+    }
+    
+    document.getElementById('batchResult').style.display = 'block';
+}
+
+// Download batch citations
+document.getElementById('downloadBatchBtn').addEventListener('click', function() {
+    const results = document.getElementById('batchCitations').innerText;
+    const style = document.getElementById('batchStyle').value;
+    
+    if (!results) {
+        showAlert('No batch results to download', 'error');
+        return;
+    }
+    
+    const blob = new Blob([results], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `batch_citations_${style.toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    showAlert('Batch citations downloaded successfully!', 'success');
+});
+</script>
+{% endblock %} 

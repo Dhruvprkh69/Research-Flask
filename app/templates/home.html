@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Research AI Assistant - Your AI Research Partner{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="card text-center">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Welcome to Research AI Assistant
+        </h1>
+        <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+            Your AI-powered companion for academic research. Understand papers, generate citations, and discover related research with ease.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('paper_analysis.paper_analysis_page') }}" class="btn">📄 Analyze Papers</a>
+            <a href="{{ url_for('search.search_page') }}" class="btn btn-secondary">🔍 Find Papers</a>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="feature-card" onclick="window.location.href='{{ url_for('paper_analysis.paper_analysis_page') }}'">
+        <div class="feature-icon">📄</div>
+        <h3>Understand Any Research Paper</h3>
+        <p>Upload any research paper and get detailed summaries, key concepts explained, and interactive Q&A. Perfect for literature reviews!</p>
+        <ul style="text-align: left; margin-top: 1rem; list-style: none;">
+            <li>✅ AI-powered summaries</li>
+            <li>✅ Interactive Q&A</li>
+            <li>✅ Literature review style</li>
+            <li>✅ Mathematical equation support</li>
+        </ul>
+    </div>
+
+    <div class="feature-card" onclick="window.location.href='{{ url_for('citations.citations_page') }}'">
+        <div class="feature-icon">📚</div>
+        <h3>Generate Citations</h3>
+        <p>Generate accurate citations in multiple formats instantly. Just paste the arXiv URL and get properly formatted citations.</p>
+        <ul style="text-align: left; margin-top: 1rem; list-style: none;">
+            <li>✅ APA, MLA, Chicago, IEEE</li>
+            <li>✅ One-click generation</li>
+            <li>✅ Download as text</li>
+            <li>✅ Batch processing</li>
+        </ul>
+    </div>
+
+    <div class="feature-card" onclick="window.location.href='{{ url_for('search.search_page') }}'">
+        <div class="feature-icon">🔍</div>
+        <h3>Find Similar Papers</h3>
+        <p>Discover related research papers using AI-powered semantic search. Find the most relevant papers for your research.</p>
+        <ul style="text-align: left; margin-top: 1rem; list-style: none;">
+            <li>✅ Semantic similarity search</li>
+            <li>✅ Category filtering</li>
+            <li>✅ Paper summaries</li>
+            <li>✅ Direct links to papers</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Why Choose Research AI Assistant?</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+        <div style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">⚡</div>
+            <h4>Fast & Efficient</h4>
+            <p>Get results in seconds, not hours. Save time on your research.</p>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+            <h4>Accurate Results</h4>
+            <p>AI-powered analysis ensures high-quality, reliable results.</p>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🎓</div>
+            <h4>Student-Friendly</h4>
+            <p>Designed specifically for students and researchers.</p>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🆓</div>
+            <h4>Free to Use</h4>
+            <p>No hidden costs or subscriptions required.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #667eea;">Getting Started</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1.5rem; border-radius: 15px;">
+            <h4 style="color: #667eea; margin-bottom: 1rem;">1. Upload Your Paper</h4>
+            <p>Start by uploading a research paper in PDF format. Our AI will extract and analyze the content.</p>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1.5rem; border-radius: 15px;">
+            <h4 style="color: #667eea; margin-bottom: 1rem;">2. Get AI Analysis</h4>
+            <p>Receive detailed summaries, key concepts, and answers to your questions about the paper.</p>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1.5rem; border-radius: 15px;">
+            <h4 style="color: #667eea; margin-bottom: 1rem;">3. Explore Further</h4>
+            <p>Find related papers, generate citations, and build your research knowledge.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    margin-bottom: 3rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.feature-card {
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.feature-card:hover {
+    border-color: #667eea;
+}
+
+.feature-card ul li {
+    padding: 0.25rem 0;
+    color: #666;
+}
+
+.feature-card ul li:before {
+    content: "✓";
+    color: #667eea;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+</style>
+{% endblock %} 

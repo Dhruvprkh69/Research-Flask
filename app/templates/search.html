@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Find Similar Papers - Research AI Assistant{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="text-align: center; margin-bottom: 2rem; color: #667eea;">🔍 Find Similar Research Papers</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+        Discover related research papers using AI-powered semantic search.
+    </p>
+</div>
+
+<div class="grid">
+    <!-- Search Form -->
+    <div class="card">
+        <h3>🔎 Search Papers</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Enter a research concept or topic to find related papers</p>
+        
+        <form id="searchForm">
+            <div style="margin-bottom: 1rem;">
+                <label for="searchConcept" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Research Concept:</label>
+                <input type="text" id="searchConcept" class="input-field" placeholder="e.g., transformer architecture in deep learning" required>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label for="searchCategory" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Category:</label>
+                <select id="searchCategory" class="input-field">
+                    <option value="cs.LG">Computer Science - Machine Learning</option>
+                    <option value="cs.AI">Computer Science - Artificial Intelligence</option>
+                    <option value="cs.NE">Computer Science - Neural Computing</option>
+                    <option value="cs.CV">Computer Science - Computer Vision</option>
+                    <option value="cs.CL">Computer Science - Natural Language Processing</option>
+                    <option value="cs.RO">Computer Science - Robotics</option>
+                    <option value="cs.SE">Computer Science - Software Engineering</option>
+                    <option value="cs.DB">Computer Science - Databases</option>
+                    <option value="cs.DC">Computer Science - Distributed Computing</option>
+                    <option value="cs.CR">Computer Science - Cryptography</option>
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label for="maxResults" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Number of Results:</label>
+                <input type="range" id="maxResults" min="1" max="10" value="5" class="input-field" style="width: 100%;">
+                <div style="text-align: center; margin-top: 0.5rem; color: #666;">
+                    <span id="maxResultsValue">5</span> papers
+                </div>
+            </div>
+            
+            <button type="submit" class="btn">🚀 Search Papers</button>
+        </form>
+        
+        <div id="searchLoading" class="loading">
+            <div class="spinner"></div>
+            <p>Searching for papers...</p>
+        </div>
+    </div>
+
+    <!-- Trending Papers -->
+    <div class="card">
+        <h3>🔥 Trending Topics</h3>
+        <p style="color: #666; margin-bottom: 1rem;">Latest trending research topics</p>
+        
+        <button class="btn btn-secondary" id="loadTrendingBtn">📈 Load Trending Topics</button>
+        
+        <div id="trendingLoading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading trending topics...</p>
+        </div>
+        
+        <div id="trendingResult" style="display: none;">
+            <div id="trendingPapers"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Results -->
+<div class="card" id="searchResultsCard" style="display: none;">
+    <h3>📄 Search Results</h3>
+    <p style="color: #666; margin-bottom: 1rem;">Found <span id="resultCount">0</span> related papers</p>
+    
+    <div id="searchResults"></div>
+</div>
+
+<!-- Quick Search Suggestions -->
+<div class="card">
+    <h3>💡 Quick Search Suggestions</h3>
+    <p style="color: #666; margin-bottom: 1rem;">Try these popular research topics</p>
+    
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary quick-search" data-concept="transformer architecture">Transformer Architecture</button>
+        <button class="btn btn-secondary quick-search" data-concept="deep learning optimization">Deep Learning Optimization</button>
+        <button class="btn btn-secondary quick-search" data-concept="computer vision applications">Computer Vision</button>
+        <button class="btn btn-secondary quick-search" data-concept="natural language processing">NLP</button>
+        <button class="btn btn-secondary quick-search" data-concept="reinforcement learning">Reinforcement Learning</button>
+        <button class="btn btn-secondary quick-search" data-concept="neural networks">Neural Networks</button>
+        <button class="btn btn-secondary quick-search" data-concept="machine learning algorithms">ML Algorithms</button>
+        <button class="btn btn-secondary quick-search" data-concept="artificial intelligence ethics">AI Ethics</button>
+    </div>
+</div>
+
+<script>
+// Update range slider value display
+document.getElementById('maxResults').addEventListener('input', function() {
+    document.getElementById('maxResultsValue').textContent = this.value;
+});
+
+// Search form submission
+document.getElementById('searchForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const concept = document.getElementById('searchConcept').value.trim();
+    const category = document.getElementById('searchCategory').value;
+    const maxResults = document.getElementById('maxResults').value;
+    
+    if (!concept) {
+        showAlert('Please enter a research concept', 'error');
+        return;
+    }
+    
+    showLoading('searchLoading');
+    hideLoading('searchResultsCard');
+    
+    try {
+        const response = await fetch('/search/search-papers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: concept,
+                category: category,
+                max_results: parseInt(maxResults)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displaySearchResults(result.papers, result.total_results);
+            showAlert(`Found ${result.total_results} papers!`, 'success');
+        } else {
+            showAlert(result.error || 'Search failed', 'error');
+        }
+    } catch (error) {
+        showAlert('Error searching papers: ' + error.message, 'error');
+    } finally {
+        hideLoading('searchLoading');
+    }
+});
+
+// Display search results
+function displaySearchResults(papers, count) {
+    const container = document.getElementById('searchResults');
+    const countElement = document.getElementById('resultCount');
+    
+    countElement.textContent = count;
+    container.innerHTML = '';
+    
+    if (papers.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #666;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                <p>No papers found matching your criteria.</p>
+                <p>Try adjusting your search terms or category.</p>
+            </div>
+        `;
+    } else {
+        papers.forEach((paper, index) => {
+            const paperCard = createPaperCard(paper, index + 1);
+            container.appendChild(paperCard);
+        });
+    }
+    
+    document.getElementById('searchResultsCard').style.display = 'block';
+}
+
+// Create paper card
+function createPaperCard(paper, index) {
+    const card = document.createElement('div');
+    card.style.cssText = 'background: rgba(102, 126, 234, 0.05); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem; border-left: 4px solid #667eea;';
+    
+    const similarityBadge = paper.similarity_score ? 
+        `<span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem; margin-left: 1rem;">${(paper.similarity_score * 100).toFixed(1)}% match</span>` : '';
+    
+    card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <h4 style="color: #667eea; margin: 0;">${index}. ${paper.title}</h4>
+            ${similarityBadge}
+        </div>
+        <p style="color: #666; line-height: 1.6; margin-bottom: 1rem;">${paper.abstract}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="color: #666; font-size: 0.9rem;">
+                📅 Published: ${paper.published_date}
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="${paper.pdf_url}" target="_blank" class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">📄 Read Paper</a>
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Load trending papers
+document.getElementById('loadTrendingBtn').addEventListener('click', async function() {
+    showLoading('trendingLoading');
+    hideLoading('trendingResult');
+    
+    try {
+        console.log('Loading trending topics...');
+        const response = await fetch('/search/trending-topics');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Trending topics result:', result);
+        
+        if (result.success) {
+            displayTrendingPapers(result.trending_topics);
+            showAlert('Trending topics loaded!', 'success');
+        } else {
+            showAlert(result.error || 'Failed to load trending topics', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading trending topics:', error);
+        showAlert('Error loading trending topics: ' + error.message, 'error');
+    } finally {
+        hideLoading('trendingLoading');
+    }
+});
+
+// Display trending papers
+function displayTrendingPapers(topics) {
+    const container = document.getElementById('trendingPapers');
+    container.innerHTML = '';
+    
+    topics.forEach((topic, index) => {
+        const topicCard = document.createElement('div');
+        topicCard.style.cssText = 'background: rgba(102, 126, 234, 0.05); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem; border-left: 4px solid #667eea;';
+        
+        topicCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h4 style="color: #667eea; margin: 0;">${index + 1}. ${topic.topic}</h4>
+                <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem;">${topic.growth_rate}</span>
+            </div>
+            <div style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+                📊 ${topic.paper_count} papers | 🏷️ ${topic.category}
+            </div>
+            <button class="btn btn-secondary" onclick="searchByCategory('${topic.category}')" style="font-size: 0.9rem; padding: 0.5rem 1rem;">🔍 Search Papers</button>
+        `;
+        
+        container.appendChild(topicCard);
+    });
+    
+    document.getElementById('trendingResult').style.display = 'block';
+}
+
+// Search by category
+function searchByCategory(category) {
+    document.getElementById('searchCategory').value = category;
+    // Use a more appropriate search term based on the category
+    const categoryTerms = {
+        'cs.LG': 'machine learning',
+        'cs.AI': 'artificial intelligence',
+        'cs.CV': 'computer vision',
+        'cs.CL': 'natural language processing',
+        'cs.NE': 'neural networks',
+        'cs.RO': 'robotics',
+        'cs.CR': 'cryptography',
+        'cs.DC': 'distributed computing'
+    };
+    const searchTerm = categoryTerms[category] || category.split('.').pop().toLowerCase();
+    document.getElementById('searchConcept').value = searchTerm;
+    document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+}
+
+// Quick search buttons
+document.querySelectorAll('.quick-search').forEach(button => {
+    button.addEventListener('click', function() {
+        const concept = this.getAttribute('data-concept');
+        document.getElementById('searchConcept').value = concept;
+        document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+    });
+});
+
+// Get paper details
+async function getPaperDetails(paperId) {
+    try {
+        const response = await fetch('/search/paper-details', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                paper_id: paperId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const details = result.details;
+            const detailsHtml = `
+                <h4>${details.title}</h4>
+                <p><strong>Authors:</strong> ${details.authors.join(', ')}</p>
+                <p><strong>Published:</strong> ${details.published_date}</p>
+                <p><strong>Categories:</strong> ${details.categories.join(', ')}</p>
+                <p><strong>Abstract:</strong> ${details.summary}</p>
+                <a href="${details.url}" target="_blank" class="btn">📄 Read Full Paper</a>
+            `;
+            
+            // Create modal or show in a new card
+            showAlert('Paper details loaded! Check the console for details.', 'success');
+            console.log('Paper Details:', details);
+        } else {
+            showAlert('Failed to load paper details', 'error');
+        }
+    } catch (error) {
+        showAlert('Error loading paper details: ' + error.message, 'error');
+    }
+}
+</script>
+{% endblock %} 
