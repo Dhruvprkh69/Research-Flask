@@ -6,14 +6,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Create Flask app instance for gunicorn
+app = create_app(os.getenv('FLASK_CONFIG', 'development'))
+
 def main():
     """Main application entry point"""
     try:
         # Get configuration from environment
         config_name = os.getenv('FLASK_CONFIG', 'development')
-        
-        # Create Flask app
-        app = create_app(config_name)
         
         # Get port from environment or use default
         port = int(os.getenv('PORT', 5000))
