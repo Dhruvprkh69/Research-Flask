@@ -43,8 +43,10 @@ pytest-flask>=1.3.0
 python-dateutil>=2.8.0
 tqdm>=4.66.0
 
-# Added from the code block
+# HTML/XML parsing (using html5lib instead of lxml for better compatibility)
 beautifulsoup4==4.12.2
-lxml==4.9.3
+html5lib>=1.1
+
+# Pydantic for data validation
 pydantic>=2.5.0
 pydantic-settings>=2.1.0 
